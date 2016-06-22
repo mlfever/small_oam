@@ -1435,7 +1435,7 @@ int telnetd_main(int argc UNUSED_PARAM, char **argv)
 	} else {
 		master_fd = 0;
 //      if (!(opt & OPT_WAIT)) {
-        if (opt) {
+        if (!opt) {
 			unsigned portnbr = 23;
 			if (opt & OPT_PORT)
 				portnbr = xatou16(opt_portnbr);
@@ -1670,7 +1670,7 @@ int so_telnetd_init(int argc, char **argv)
     return 0;
 }
 
-#if 1
+#if 0
 
 int main(int argc, char **argv)
 {
