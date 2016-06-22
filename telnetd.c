@@ -50,6 +50,7 @@
 #if SO_TELNETD
 /* system header file */
 
+#include <pthread.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <pty.h>
@@ -1379,7 +1380,7 @@ int telnetd_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
 int telnetd_main(int argc UNUSED_PARAM, char **argv)
 {
 	fd_set rdfdset, wrfdset;
-	unsigned opt;
+	unsigned opt = 0;
 	int count;
 	struct tsession *ts;
 #if ENABLE_FEATURE_TELNETD_STANDALONE
@@ -1414,7 +1415,8 @@ int telnetd_main(int argc UNUSED_PARAM, char **argv)
 		/* inform that we start in standalone mode?
 		 * May be useful when people forget to give -i */
 		/*bb_error_msg("listening for connections");*/
-		if (!(opt & OPT_FOREGROUND)) {
+//      if (!(opt & OPT_FOREGROUND)) {
+        if (opt) {
 			/* DAEMON_CHDIR_ROOT was giving inconsistent
 			 * behavior with/without -F, -i */
 			bb_daemonize_or_rexec(0 /*was DAEMON_CHDIR_ROOT*/, argv);
@@ -1432,7 +1434,8 @@ int telnetd_main(int argc UNUSED_PARAM, char **argv)
 			return 1; /* make_new_session printed error message */
 	} else {
 		master_fd = 0;
-		if (!(opt & OPT_WAIT)) {
+//      if (!(opt & OPT_WAIT)) {
+        if (opt) {
 			unsigned portnbr = 23;
 			if (opt & OPT_PORT)
 				portnbr = xatou16(opt_portnbr);
@@ -1647,9 +1650,41 @@ int telnetd_main(int argc UNUSED_PARAM, char **argv)
 }
 
 #if SO_TELNETD
+void *so_telnetd_handle(void *param)
+{
+    telnetd_main(0, (char **)param);
+}
+
+int so_telnetd_init(int argc, char **argv)
+{
+    int rv = 0;
+    pthread_t pid;
+
+    rv = pthread_create(&pid, NULL, so_telnetd_handle, argv);
+    if (rv == -1)
+    {
+        printf("telnetd thread create failed\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+#if 1
+
 int main(int argc, char **argv)
 {
-    telnetd_main(argc, argv);
+    int rv = 0;
+
+    rv = so_telnetd_init(argc, argv);
+
+    while (1)
+    {
+        sleep(100);    
+    }
+
+    return rv;
 }
+#endif
 
 #endif
