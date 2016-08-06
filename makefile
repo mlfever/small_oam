@@ -6,5 +6,5 @@ $(objects):
 	gcc -g -c telnetd.c -lpthread
 	gcc -g -c main.c
 clean:
-	rm soam $(objects)
+	rm -rf soam $(objects)
 	
